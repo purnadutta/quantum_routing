@@ -28,5 +28,9 @@ class SimConfig:
     # User pairs (list of (src, dst) tuples, set at runtime)
     user_pairs: list = field(default_factory=list)
 
+    # Distance scaling: divide all edge lengths by this factor
+    # Use > 1 to simulate shorter links on continental-scale topologies
+    distance_scale: float = 1.0
+
     # Routing algorithm: "greedy" or "mcf"
     algorithm: str = "greedy"

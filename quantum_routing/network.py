@@ -34,7 +34,10 @@ class QuantumNetwork:
         self.graph.add_node(node_id, **attrs)
 
     def add_edge(self, u: str, v: str, length_km: float):
-        self.graph.add_edge(u, v, length_km=length_km)
+        # Apply distance scaling (e.g., distance_scale=10 makes 1000 km -> 100 km)
+        scaled_length = length_km / self.config.distance_scale
+        self.graph.add_edge(u, v, length_km=scaled_length,
+                            length_km_original=length_km)
         key = frozenset((u, v))
         if key not in self.link_state:
             self.link_state[key] = []
