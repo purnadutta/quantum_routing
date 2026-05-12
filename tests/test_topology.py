@@ -3,6 +3,7 @@
 import pytest
 from quantum_routing.utils.config import SimConfig
 from quantum_routing.topologies.nsfnet import build_nsfnet, NSFNET_NODES, NSFNET_EDGES
+from quantum_routing.topologies.surfnet import build_surfnet, SURFNET_NODES, SURFNET_EDGES
 
 
 @pytest.fixture
@@ -58,4 +59,41 @@ class TestNSFNET:
         for u, v, data in net.graph.edges(data=True):
             assert 100 <= data["length_km"] <= 2000, (
                 f"Edge {u}-{v} has unrealistic distance {data['length_km']} km"
+            )
+
+
+class TestSURFnet:
+    """Tests for the pruned SURFnet topology (17-node)."""
+
+    def test_node_count(self, config):
+        net = build_surfnet(config)
+        assert len(net.graph.nodes) == 17
+
+    def test_edge_count(self, config):
+        net = build_surfnet(config)
+        assert len(net.graph.edges) == len(SURFNET_EDGES)
+
+    def test_all_nodes_present(self, config):
+        net = build_surfnet(config)
+        for node_id in SURFNET_NODES:
+            assert node_id in net.graph.nodes
+
+    def test_edges_have_length(self, config):
+        net = build_surfnet(config)
+        for u, v, data in net.graph.edges(data=True):
+            assert "length_km" in data
+            assert data["length_km"] > 0
+
+    def test_graph_connected(self, config):
+        """SURFnet should be a connected graph."""
+        import networkx as nx
+        net = build_surfnet(config)
+        assert nx.is_connected(net.graph)
+
+    def test_realistic_distances(self, config):
+        """Edge distances should be in Netherlands range (10-80 km)."""
+        net = build_surfnet(config)
+        for u, v, data in net.graph.edges(data=True):
+            assert 10 <= data["length_km"] <= 80, (
+                f"Edge {u}-{v} has distance {data['length_km']} km"
             )

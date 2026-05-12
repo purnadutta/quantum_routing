@@ -1,0 +1,22 @@
+\section{Discussion and Conclusion}
+\label{sec:discussion}
+
+\subsection{Interpretation of Results}
+
+Going in, we expected MCF to consistently outperform greedy routing since it optimizes globally across all user pairs rather than serving them one at a time. This is largely what we observe on the scaled US topologies: MCF delivers roughly $10\times$ more pairs than greedy on NSFNET's TX--MI path and nearly $2\times$ more on Abilene's HOU--WAS path. The intuition is that greedy wastes links on long paths that end up failing the fidelity check, while MCF avoids this. However, two results went against our expectations.
+
+First, on SURFnet, MCF slightly underperforms greedy in the fidelity threshold sweep. We conjecture this is because SURFnet is resource-starved (unscaled distances give low generation probabilities, avg $\sim$0.13), and MCF's attempt to serve multiple pairs simultaneously may spread scarce links too thin, leaving partial paths that none can complete. Greedy's simpler one-at-a-time approach may be more efficient in this regime. We have not rigorously verified this explanation and it remains a conjecture.
+
+Second, MCF slightly degrades the average delivered fidelity on Abilene's HOU--WAS pair (0.885 vs 0.901 for greedy) despite delivering many more pairs. We believe this is because MCF occasionally routes HOU--WAS through a longer alternate path to free up shared links for other pairs, and these longer-path deliveries pull the average fidelity down. Again, this is our best guess based on the data rather than a proven explanation.
+
+We also noticed that NSFNET greedy performance \emph{decreases} as cutoff time increases, which is counterintuitive since longer memory should help. Our conjecture is that accumulated stale links get routed along long undeliverable paths, wasting resources that shorter viable paths could have used, but we have not confirmed this mechanistically.
+
+More broadly, the dominant pattern is that hop count is the binding constraint at $F_\text{min} = 0.80$: with $F_\text{init} = 0.95$ and the depolarizing swap model, paths beyond 4 hops cannot produce usable entanglement regardless of routing strategy. Most of our user pairs are 4--6 hops, which limits what any algorithm can achieve.
+
+\subsection{Limitations and Future Work}
+
+Our user pairs were chosen to span each network geographically, which inadvertently made most of them too long to deliver at $F_\text{min} = 0.80$. A more careful selection with 2--3 hop pairs would give both algorithms more room to differentiate. Other natural extensions include introducing probabilistic swap success ($q_\text{swap} < 1$), imperfect gate fidelities, continuous fidelity decay during storage, and realistic classical communication delays (which would hurt MCF more than greedy since MCF relies on global state). Computing secret key rates from delivered fidelities would also connect our results to concrete QKD application performance.
+
+\subsection{Conclusion}
+
+We extended single-pair quantum routing to the multi-user concurrent setting, comparing greedy and MCF across three topologies. MCF provides clear throughput gains in link-rich regimes but is not universally better: it can underperform in resource-scarce networks and may trade fidelity for throughput. The fidelity bottleneck from multi-hop swapping imposes a hard ceiling on useful path length that no routing algorithm can overcome, suggesting that topology-aware pair selection and short-hop network design matter as much as routing strategy.

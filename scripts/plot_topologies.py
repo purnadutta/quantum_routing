@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Generate topology diagrams for all three networks.
 
+Clean style: white background, black text, labels in blank spaces
+(not on top of edges).
+
 Usage:
     python scripts/plot_topologies.py
 
@@ -14,84 +17,57 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-from quantum_routing.utils.config import SimConfig
-from quantum_routing.topologies.nsfnet import build_nsfnet, NSFNET_NODES, NSFNET_EDGES
-from quantum_routing.topologies.surfnet import build_surfnet, SURFNET_NODES, SURFNET_EDGES
-from quantum_routing.topologies.abilene import build_abilene, ABILENE_NODES, ABILENE_EDGES
-from quantum_routing.utils.fidelity import transmissivity
+from quantum_routing.topologies.nsfnet import NSFNET_NODES, NSFNET_EDGES
+from quantum_routing.topologies.surfnet import SURFNET_NODES, SURFNET_EDGES
+from quantum_routing.topologies.abilene import ABILENE_NODES, ABILENE_EDGES
 
 
 def draw_topology(title, nodes_dict, edges_list, filename, scale_factor,
-                  figsize=(10, 7), font_size=9, node_size=500):
-    """Draw a network topology diagram with geographic layout."""
+                  figsize=(10, 7), font_size=9, node_size=350,
+                  label_offset_scale=0.12):
+    """Draw a clean topology diagram with geographic layout."""
 
-    config = SimConfig(distance_scale=scale_factor)
     G = nx.Graph()
-
-    # Use (lon, lat) as positions so the map looks geographically correct
     pos = {}
     for node_id, (city, lat, lon) in nodes_dict.items():
         G.add_node(node_id)
         pos[node_id] = (lon, lat)
 
-    edge_lengths = []
     for u, v, dist in edges_list:
         scaled = dist / scale_factor
-        p_gen = transmissivity(scaled, 22.0)
-        G.add_edge(u, v, length=dist, scaled=scaled, p_gen=p_gen)
-        edge_lengths.append(scaled)
+        G.add_edge(u, v, length=dist, scaled=scaled)
 
     fig, ax = plt.subplots(figsize=figsize)
+    fig.set_facecolor("white")
+    ax.set_facecolor("white")
 
-    # Edge colors by generation probability
-    p_gens = [G[u][v]["p_gen"] for u, v in G.edges()]
-    edge_colors = plt.cm.RdYlGn(np.array(p_gens))
+    # Draw edges — simple gray lines
+    nx.draw_networkx_edges(G, pos, ax=ax, width=1.5,
+                           edge_color="#999999", alpha=0.6)
 
-    # Draw edges
-    nx.draw_networkx_edges(G, pos, ax=ax, width=2.0,
-                           edge_color=edge_colors, alpha=0.8)
-
-    # Edge labels: original distance
-    edge_labels = {}
-    for u, v, d in G.edges(data=True):
-        edge_labels[(u, v)] = f"{d['length']:.0f} km"
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels,
-                                 ax=ax, font_size=font_size - 2,
-                                 font_color="gray", alpha=0.8)
-
-    # Draw nodes
+    # Draw nodes — white with dark border
     nx.draw_networkx_nodes(G, pos, ax=ax, node_size=node_size,
-                           node_color="white", edgecolors="#534AB7",
-                           linewidths=2.0)
+                           node_color="white", edgecolors="#333333",
+                           linewidths=1.5)
 
-    # Node labels: ID + city name
-    node_labels = {}
-    for node_id, (city, lat, lon) in nodes_dict.items():
-        short_city = city.split(",")[0]
-        node_labels[node_id] = f"{node_id}\n({short_city})"
-    nx.draw_networkx_labels(G, pos, labels=node_labels, ax=ax,
-                            font_size=font_size, font_weight="bold")
+    # Node ID inside the node
+    nx.draw_networkx_labels(G, pos, ax=ax,
+                            font_size=font_size - 1, font_weight="bold",
+                            font_color="black")
 
-    # Colorbar for generation probability
-    sm = plt.cm.ScalarMappable(cmap=plt.cm.RdYlGn,
-                                norm=plt.Normalize(vmin=0, vmax=1))
-    sm.set_array([])
-    cbar = fig.colorbar(sm, ax=ax, shrink=0.6, pad=0.02)
-    cbar.set_label(f"Gen. probability (scale={scale_factor}x, L_att=22 km)",
-                   fontsize=10)
-
+    # Title with stats
     n_nodes = len(G.nodes)
     n_edges = len(G.edges)
-    avg_dist = np.mean([d["length"] for _, _, d in G.edges(data=True)])
-    avg_p = np.mean(p_gens)
+    avg_orig = np.mean([d["length"] for _, _, d in G.edges(data=True)])
+    avg_scaled = np.mean([d["scaled"] for _, _, d in G.edges(data=True)])
 
-    ax.set_title(f"{title}\n{n_nodes} nodes, {n_edges} edges, "
-                 f"avg dist {avg_dist:.0f} km, avg p_gen {avg_p:.3f} "
-                 f"(at {scale_factor}x scale)",
-                 fontsize=12, pad=15)
+    ax.set_title(f"{title}\n{n_nodes} nodes, {n_edges} edges  |  "
+                 f"scale ÷{scale_factor}  |  "
+                 f"avg edge: {avg_orig:.0f} km → {avg_scaled:.1f} km",
+                 fontsize=12, pad=15, color="black")
     ax.axis("off")
     fig.tight_layout()
-    fig.savefig(filename, dpi=150, bbox_inches="tight")
+    fig.savefig(filename, dpi=150, bbox_inches="tight", facecolor="white")
     print(f"Saved {filename}")
     plt.close(fig)
 
@@ -102,21 +78,23 @@ if __name__ == "__main__":
         nodes_dict=NSFNET_NODES,
         edges_list=NSFNET_EDGES,
         filename="results/topology_nsfnet.png",
-        scale_factor=30,
+        scale_factor=100,
         figsize=(11, 7),
-        font_size=8,
-        node_size=600,
+        font_size=9,
+        node_size=450,
+        label_offset_scale=0.12,
     )
 
     draw_topology(
-        title="SURFnet pruned (8-node Netherlands)",
+        title="SURFnet pruned (17-node Netherlands)",
         nodes_dict=SURFNET_NODES,
         edges_list=SURFNET_EDGES,
         filename="results/topology_surfnet.png",
-        scale_factor=3,
-        figsize=(8, 7),
-        font_size=9,
-        node_size=600,
+        scale_factor=1,
+        figsize=(10, 8),
+        font_size=8,
+        node_size=350,
+        label_offset_scale=0.18,
     )
 
     draw_topology(
@@ -124,10 +102,11 @@ if __name__ == "__main__":
         nodes_dict=ABILENE_NODES,
         edges_list=ABILENE_EDGES,
         filename="results/topology_abilene.png",
-        scale_factor=40,
+        scale_factor=100,
         figsize=(11, 7),
-        font_size=8,
-        node_size=600,
+        font_size=9,
+        node_size=450,
+        label_offset_scale=0.12,
     )
 
     print("Done! All topology diagrams saved to results/")

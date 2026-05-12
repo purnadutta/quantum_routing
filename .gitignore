@@ -6,3 +6,4 @@ results/*.png
 *.egg-info/
 .idea/
 .vscode/
+.DS_Store

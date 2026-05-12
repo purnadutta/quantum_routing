@@ -1,0 +1,10 @@
+\section{Implementation}
+\label{sec:implementation}
+
+All source code is available at \url{https://github.com/purnadutta/quantum_routing}. The simulator is written in Python using NetworkX for graph operations. A \texttt{QuantumNetwork} object maintains the physical topology alongside a dynamic link state mapping each edge to a list of stored entangled pairs, each with a fidelity and age. A \texttt{SimConfig} dataclass holds all parameters, making runs fully reproducible with a fixed random seed.
+
+Each time step runs four phases: (1) every edge independently attempts Bernoulli generation with $p_\text{gen} = p_0 \cdot e^{-L/L_\text{att}}$, storing successful pairs at fidelity $F_\text{init}$; (2) all links are aged and those exceeding $T_\text{cut}$ are discarded; (3) a routing algorithm selects paths for each user pair; (4) links along chosen paths are consumed (highest fidelity first), swaps are applied, and pairs meeting $F_\text{min}$ are recorded as delivered.
+
+We implement two routing algorithms. \textbf{Greedy} serves pairs sequentially, picking the fidelity-maximizing shortest path ($-\log F$ weights) on the active subgraph and consuming its links before considering the next pair. \textbf{MCF} considers all pairs jointly: it enumerates up to 10 candidate paths per pair via Yen's algorithm, prunes those below $F_\text{min}$, and solves an ILP (\texttt{scipy.optimize.milp}) maximizing total delivered pairs subject to edge-capacity and one-path-per-pair constraints.
+
+Default experiments run 500 time steps. Parameter sweeps vary one parameter ($T_\text{cut}$ or $F_\text{min}$) while holding others fixed. The codebase includes 96 unit tests validating topology construction, fidelity math, and both algorithms.

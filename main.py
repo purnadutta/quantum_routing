@@ -15,7 +15,7 @@ from quantum_routing.simulation import run_simulation
 # Representative user pairs for each topology
 DEFAULT_USER_PAIRS = {
     "nsfnet": [("WA", "DC"), ("CA1", "NY"), ("TX", "MI")],
-    "surfnet": [("AMS", "EIN"), ("DEL", "GRO"), ("HAG", "ENS")],
+    "surfnet": [("AMS", "NIJ"), ("DEL", "ENS"), ("RTM", "ZWO")],
     "abilene": [("SEA", "NYC"), ("LAX", "CHI"), ("HOU", "WAS")],
 }
 

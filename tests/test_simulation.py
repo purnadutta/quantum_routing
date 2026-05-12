@@ -62,7 +62,7 @@ class TestSimulationIntegration:
         assert metrics.entanglement_rate() == 0.0
 
     def test_short_edges_produce_deliveries(self):
-        """Short-range pairs on NSFNET with good links should produce some deliveries."""
+        """Short-range pairs on NSFNET with scaled distances should produce deliveries."""
         config = SimConfig(
             num_time_steps=20,
             p_gen_base=1.0,
@@ -71,7 +71,8 @@ class TestSimulationIntegration:
             q_swap=1.0,
             f_init=0.95,
             f_min=0.50,  # lenient threshold
-            user_pairs=[("NJ", "DC")],  # short path: NJ -> DC (250 km)
+            distance_scale=30,  # scale down continental distances
+            user_pairs=[("NJ", "DC")],  # short path: NJ -> DC
             algorithm="greedy",
         )
         random.seed(42)

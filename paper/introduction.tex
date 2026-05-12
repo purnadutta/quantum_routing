@@ -1,0 +1,8 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Quantum networks distribute entanglement between distant nodes over optical fiber, enabling applications like quantum key distribution and distributed quantum computing~\cite{kimble2008quantum, wehner2018quantum}. Unlike classical networks, quantum networks are constrained by probabilistic link generation, finite memory coherence, and the no-cloning theorem, making routing fundamentally harder.
+
+Most prior work focuses on single source-destination pairs. Vardoyan et al.~\cite{vardoyan2024bipartite} study bipartite entanglement capacity but restrict analysis to one pair at a time. In practice, a deployed network must serve multiple users concurrently. This work extends that setting to multi-user concurrent routing, comparing greedy shortest-path routing against globally optimized multi-commodity flow (MCF).
+
+We built a custom discrete-time simulator in Python rather than using existing platforms like NetSquid~\cite{coopmans2021netsquid} or SeQUeNCe~\cite{wu2021sequence}, keeping the codebase lightweight and focused on routing-layer comparisons. We evaluate on three topologies (NSFNET, SURFnet, Abilene) and measure performance via entanglement rate (delivered pairs per time step) and average delivered fidelity.
